@@ -1,0 +1,54 @@
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    name: "Android build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: prisma/prisma-engines
+      - name: Use specific Java version for sdkmanager to work
+        uses: joschi/setup-jdk@v2
+        with:
+          java-version: "openjdk8"
+          architecture: "x64"
+      - name: Delete newer NDK version
+        run: |
+          rm -rf $ANDROID_HOME/ndk/22*
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+      - run: |
+          ls -al ~/
+          ls -al ~/.cargo
+          echo "[target.armv7-linux-androideabi]" > ~/.cargo/config
+          echo "ar = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-ar\"" >> ~/.cargo/config
+          echo "linker = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang\"" >> ~/.cargo/config
+          cat ~/.cargo/config
+      - run: rustup target add armv7-linux-androideabi
+      - run: echo "::set-output name=NDK_TOOLCHAINS::${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        id: android
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target armv7-linux-androideabi --release
+        env:
+          CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang
+          CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang++
+          AR: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ar
+          LD: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ld
+          RANLIB: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ranlib
+      - uses: actions/upload-artifact@v2
+        with:
+          name: target
+          path: target/
