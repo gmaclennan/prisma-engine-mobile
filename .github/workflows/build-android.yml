@@ -9,6 +9,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: prisma/prisma-engines
+          ref: '2.25.0'
       - name: Use specific Java version for sdkmanager to work
         uses: joschi/setup-jdk@v2
         with:
@@ -23,7 +24,7 @@ jobs:
           default: true
       - run: |
           ls -al ~/
-          ls -al ~/.cargo
+          ls -al ~/.cargo.toml
           echo "[target.armv7-linux-androideabi]" > ~/.cargo/config
           echo "ar = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-ar\"" >> ~/.cargo/config
           echo "linker = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang\"" >> ~/.cargo/config
@@ -41,14 +42,19 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target armv7-linux-androideabi --release
+          args: --target armv7-linux-androideabi --release --bin query-engine
         env:
           CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang
           CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang++
           AR: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ar
           LD: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ld
           RANLIB: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ranlib
+          CARGO_PROFILE_RELEASE_LTO: true
+          CARGO_PROFILE_RELEASE_OPT_LEVEL: z
+          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
+      - name: Strip debug symbols
+        run: strip target/armv7-linux-androideabi/release/query-engine
       - uses: actions/upload-artifact@v2
         with:
-          name: target
-          path: target/
+          name: query-engine
+          path: target/armv7-linux-androideabi/release/query-engine
