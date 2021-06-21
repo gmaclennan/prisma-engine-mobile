@@ -6,6 +6,7 @@ jobs:
     name: "Android build"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target:
           - { abi: armeabi-v7a, triple: armv7a-linux-androideabi, rustTriple:  armv7-linux-androideabi }
