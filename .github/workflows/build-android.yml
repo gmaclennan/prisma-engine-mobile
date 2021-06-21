@@ -49,16 +49,17 @@ jobs:
           echo 'linker = "${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang"' >> ~/.cargo/config.toml
           cat ~/.cargo/config.toml
       - run: rustup target add ${{ matrix.target.rustTriple }}
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: |
-      #       ~/.cargo/registry
-      #       ~/.cargo/git
-      #       target
-      #     key: ${{ runner.os }}-${{ matrix.target.abi }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target.abi }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1
         with:
           command: build
+          use-cross: true
           args: --target ${{ matrix.target.rustTriple }} --release -p query-engine
         env:
           CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang
