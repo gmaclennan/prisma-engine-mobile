@@ -18,8 +18,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends pkg-config libssl-dev
       - uses: actions/checkout@v2
         with:
-          repository: prisma/prisma-engines
-          ref: '2.25.0'
+          repository: gmaclennan/prisma-engines
+          # ref: '2.25.0'
       - name: Use specific Java version for sdkmanager to work
         uses: joschi/setup-jdk@v2
         with:
