@@ -57,7 +57,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target ${{ matrix.target.rustTriple }} --release -p query-engine-napi
+          args: --target ${{ matrix.target.rustTriple }} --release --bin query-engine
         env:
           CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang
           CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang++
@@ -70,4 +70,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.target.abi }}
-          path: target/${{ matrix.target.triple }}/release/libquery_engine_napi.so
+          path: target/${{ matrix.target.triple }}/release/query-engine
