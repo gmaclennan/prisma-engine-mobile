@@ -15,7 +15,7 @@ jobs:
           - { abi: x86-64, triple: x86_64-linux-android, rustTriple:  x86_64-linux-android }
     steps:
       - name: Install System Dependencies
-        run: sudo apt-get update && apt-get install -y --no-install-recommends libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libssl-dev
       - uses: actions/checkout@v2
         with:
           repository: prisma/prisma-engines
