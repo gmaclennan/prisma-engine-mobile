@@ -5,6 +5,13 @@ jobs:
   build:
     name: "Android build"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - { abi: armeabi-v7a, triple: armv7a-linux-androideabi }
+          - { abi: arm64-v8a, triple: aarch64-linux-android}
+          - { abi: x86, triple: i686-linux-android }
+          - { abi: x86-64, triple: x86_64-linux-android }
     steps:
       - uses: actions/checkout@v2
         with:
@@ -15,23 +22,30 @@ jobs:
         with:
           java-version: "openjdk8"
           architecture: "x64"
-      - name: Delete newer NDK version
+      - name: Set toolchain bin path
+        run: echo "::set-output name=NDK_TOOLCHAINS::${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        id: android
+      - name: Symlinks for triple names for armv7a
+        working-directory: ${{ steps.android.outputs.NDK_TOOLCHAINS}}
         run: |
-          rm -rf $ANDROID_HOME/ndk/22*
-      - uses: actions-rs/toolchain@v1
+          for source in arm-linux-androideabi-*
+          do
+              dest=${source/arm/armv7a}
+              ln -sf $source $dest
+          done
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           default: true
       - run: |
           ls -al ~/
           ls -al ~/.cargo
-          echo "[target.armv7-linux-androideabi]" > ~/.cargo/config.toml
-          echo "ar = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-ar\"" >> ~/.cargo/config.toml
-          echo "linker = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang\"" >> ~/.cargo/config.toml
+          echo '[target.${{ matrix.target.triple }}]' > ~/.cargo/config.toml
+          echo 'ar = "${{ steps.android.outputs.NDK_TOOLCHAINS}/${{ matrix.target.triple }}-ar"' >> ~/.cargo/config.toml
+          echo 'linker = "${{ steps.android.outputs.NDK_TOOLCHAINS}/${{ matrix.target.triple }}21-clang"' >> ~/.cargo/config.toml
           cat ~/.cargo/config.toml
       - run: rustup target add armv7-linux-androideabi
-      - run: echo "::set-output name=NDK_TOOLCHAINS::${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-        id: android
       - uses: actions/cache@v2
         with:
           path: |
@@ -42,17 +56,17 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target armv7-linux-androideabi --release --bin query-engine
+          args: --target ${{ matrix.target.triple }} --release -p query-engine-napi
         env:
-          CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang
-          CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/armv7a-linux-androideabi30-clang++
-          AR: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ar
-          LD: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ld
-          RANLIB: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/arm-linux-androideabi-ranlib
+          CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang
+          CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang++
+          AR: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}-ar
+          LD: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}-ld
+          RANLIB: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}-ranlib
           CARGO_PROFILE_RELEASE_LTO: true
           CARGO_PROFILE_RELEASE_OPT_LEVEL: z
           CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 1
       - uses: actions/upload-artifact@v2
         with:
-          name: query-engine
-          path: target/armv7-linux-androideabi/release/query-engine
+          name: ${{ matrix.target.abi }}
+          path: target/${{ matrix.target.triple }}/release/libquery_engine_napi.so
