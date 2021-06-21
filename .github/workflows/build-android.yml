@@ -24,11 +24,11 @@ jobs:
           default: true
       - run: |
           ls -al ~/
-          ls -al ~/.cargo.toml
-          echo "[target.armv7-linux-androideabi]" > ~/.cargo/config
-          echo "ar = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-ar\"" >> ~/.cargo/config
-          echo "linker = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang\"" >> ~/.cargo/config
-          cat ~/.cargo/config
+          ls -al ~/.cargo
+          echo "[target.armv7-linux-androideabi]" > ~/.cargo/config.toml
+          echo "ar = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-ar\"" >> ~/.cargo/config.toml
+          echo "linker = \"${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang\"" >> ~/.cargo/config.toml
+          cat ~/.cargo/config.toml
       - run: rustup target add armv7-linux-androideabi
       - run: echo "::set-output name=NDK_TOOLCHAINS::${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin"
         id: android
