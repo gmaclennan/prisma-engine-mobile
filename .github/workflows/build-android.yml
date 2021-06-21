@@ -8,10 +8,10 @@ jobs:
     strategy:
       matrix:
         target:
-          - { abi: armeabi-v7a, triple: armv7a-linux-androideabi }
-          - { abi: arm64-v8a, triple: aarch64-linux-android}
-          - { abi: x86, triple: i686-linux-android }
-          - { abi: x86-64, triple: x86_64-linux-android }
+          - { abi: armeabi-v7a, triple: armv7a-linux-androideabi, rustTriple:  armv7-linux-androideabi }
+          - { abi: arm64-v8a, triple: aarch64-linux-android, rustTriple: aarch64-linux-android }
+          - { abi: x86, triple: i686-linux-android, rustTriple:  i686-linux-android }
+          - { abi: x86-64, triple: x86_64-linux-android, rustTriple:  x86_64-linux-android }
     steps:
       - uses: actions/checkout@v2
         with:
@@ -41,11 +41,11 @@ jobs:
       - run: |
           ls -al ~/
           ls -al ~/.cargo
-          echo '[target.${{ matrix.target.triple }}]' > ~/.cargo/config.toml
+          echo '[target.${{ matrix.target.rustTriple }}]' > ~/.cargo/config.toml
           echo 'ar = "${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}-ar"' >> ~/.cargo/config.toml
           echo 'linker = "${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang"' >> ~/.cargo/config.toml
           cat ~/.cargo/config.toml
-      - run: rustup target add ${{ matrix.target.triple }}
+      - run: rustup target add ${{ matrix.target.rustTriple }}
       - uses: actions/cache@v2
         with:
           path: |
@@ -56,7 +56,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target ${{ matrix.target.triple }} --release -p query-engine-napi
+          args: --target ${{ matrix.target.rustTriple }} --release -p query-engine-napi
         env:
           CC: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang
           CXX: ${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang++
