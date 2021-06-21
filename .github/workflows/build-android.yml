@@ -42,8 +42,8 @@ jobs:
           ls -al ~/
           ls -al ~/.cargo
           echo '[target.${{ matrix.target.triple }}]' > ~/.cargo/config.toml
-          echo 'ar = "${{ steps.android.outputs.NDK_TOOLCHAINS}/${{ matrix.target.triple }}-ar"' >> ~/.cargo/config.toml
-          echo 'linker = "${{ steps.android.outputs.NDK_TOOLCHAINS}/${{ matrix.target.triple }}21-clang"' >> ~/.cargo/config.toml
+          echo 'ar = "${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}-ar"' >> ~/.cargo/config.toml
+          echo 'linker = "${{ steps.android.outputs.NDK_TOOLCHAINS }}/${{ matrix.target.triple }}21-clang"' >> ~/.cargo/config.toml
           cat ~/.cargo/config.toml
       - run: rustup target add armv7-linux-androideabi
       - uses: actions/cache@v2
